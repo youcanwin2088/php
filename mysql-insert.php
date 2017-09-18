@@ -30,10 +30,6 @@ Firstname: <input type="text" name="firstname" />
     //mysql_query("set names latin1");
     //mysql_set_charset('utf8', $conn); 
         
-                        
-     // 从表中提取信息的sql语句
-    //$strsql="SELECT id,name,login FROM no_members limit 470,15";
-    
     //执行插入
     if( $_POST['firstname'] != ''){
         
@@ -45,12 +41,12 @@ Firstname: <input type="text" name="firstname" />
         $result=mysql_db_query($mysql_database, $strsql, $conn);
     }
     
-    
+                        
+     // 从表中提取信息的sql语句
+    //$strsql="SELECT id,name,login FROM no_members limit 470,15";    
     $strsql="SELECT name FROM s";
     // mysql_query("SET character_set_results = utf8");  
     // 执行sql查询
-    
-    
     
     $result=mysql_db_query($mysql_database, $strsql, $conn);
      
