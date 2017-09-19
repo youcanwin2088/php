@@ -1,19 +1,28 @@
-﻿mysql库一般在用文本文件(source *.sql)或者控制台输入insert语句，来导入数据的时候，需要set names gbk,设置gbk会正确保存中文字符,并且在控制台正确显示中文，即使建设库的用的是utf8.（在文本文件里设置，控制台也一样
- <br>SET NAMES gbk
- <br>SET character_set_client = gbk */
- <br>像ENGINE=InnoDB AUTO_INCREMENT=1016 DEFAULT CHARSET=utf8;这个不需要变
+﻿1.mysql库(假设库的编码都是用utf8保存），那么一般在Windows命令控制台输入insert语句时，如若要正确保存中文以utf8方式,并且在控制台显示中文，那么需要输入命令:
+ <br>SET NAMES gbk （这一句是让三个变量都为gbk）
+ 输入这一句后用show variables like 'chara%'; 可以看到3个字符集（ character_set_client，character_set_connection，character_set_results）都设置成了gbk,紧接着用：
+ <br>insert into s values('我们你');
+ <br>这样的语句是可以插入中文，但是最终保存的中文格式并不是
+ utf8而是gbk格式，这个和用php或其他java程序等以utf8方式插入会有区别，会显示成乱码,
+ 解决办法就是再加一句 
+ <br>SET character_set_connection = utf8;
+ <br>这一句是重置character_set_connection=utf8,这样character_set_client=gbk格式会被转换成utf8保存
+ 起来，最终写入数据库的都是utf8.
  
- <br> 
- 如果用的是set names latin1，虽然可以正确保存中文，但是保存的都是latin1格式，所以在用程序如php,读取时会比较麻烦，需要从utf8转换称gbk， 注意是utf8（用mb_convert_encoding函数），而不是latin1,而服务器端最终保存的都是utf8.<br>
- 如果用set names utf8，反而无法正确保存中文,不要用utf8<br>
  
- <br>在php语句里使用传统的mysql_connect后，在php5.2.*版本里，需要申明结果集用utf8格式   
- mysql_query("SET character_set_results =utf8");
- 而在php5.6版本里，则不需要；其它版本的php未测试 <br>
- 
- http://www.jb51.net/article/30864.htm<br>
+<br><br>2.用文本文件(source *.sql)来导入数据的时候，文本文件里所有的地方都用utf8,文件格式也用utf8
+然后在控制台运行set names utf8,
+然后运行 source *.sql 来导入文本文件的内容到数据库。
+但是这个时候在控制台不能正确显示中文，那么运行
+ <br>SET character_set_results = gbk */
+ 就可以了；如果这个时候再想从控制台直接用语句插入中文那么运行
+ <br>SET character_set_connection = gbk 
 
------------------------------------    
+<br>
+<br>参考文章<a href="http://blog.csdn.net/fdipzone/article/details/18180325">http://blog.csdn.net/fdipzone/article/details/18180325</a><br>
+
+-----------------------------------  
+页面测试：
 <form action="./mysql-insert.php" method="post">
 Firstname: <input type="text" name="firstname" />
 <input type="submit" value="插入这个表单数据"/>
@@ -40,9 +49,9 @@ Firstname: <input type="text" name="firstname" />
     $conn=mysql_connect($mysql_server_name, $mysql_username,
                         $mysql_password);
     
-    mysql_query("SET character_set_results =utf8");
+    //mysql_query("SET character_set_results =utf8");
                         
-    //mysql_query("set names latin1");
+    mysql_query("set names utf8");
     //mysql_set_charset('utf8', $conn); 
         
     //执行插入
@@ -50,7 +59,10 @@ Firstname: <input type="text" name="firstname" />
         
         //$strsql="INSERT INTO s values('".mb_convert_encoding('提取信息',"gbk","utf-8")."')";
         echo "表单数据=".$_POST['firstname']."<br>" ;
-        $strsql="INSERT INTO s values('".mb_convert_encoding($_POST['firstname'],"gbk","utf-8")."')";
+        
+        //$strsql="INSERT INTO s values('".mb_convert_encoding($_POST['firstname'],"gbk","utf-8")."')";
+        echo $strsql;
+        $strsql="INSERT INTO s values('".$_POST['firstname']."')";
         echo $strsql;
         
         $result=mysql_db_query($mysql_database, $strsql, $conn);
@@ -58,8 +70,8 @@ Firstname: <input type="text" name="firstname" />
     
                         
      // 从表中提取信息的sql语句
-    $strsql="SELECT id,name,login FROM no_members limit 470,15";    
-    //$strsql="SELECT name FROM s";
+    //$strsql="SELECT id,name,login FROM no_members limit 470,15";    
+    $strsql="SELECT name FROM s";
     // mysql_query("SET character_set_results = utf8");  
     // 执行sql查询
     
